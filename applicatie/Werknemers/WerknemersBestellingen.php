@@ -65,6 +65,7 @@
                     </select>
                 </span>
                 <span>Straat 456, Stad</span>
+                <button type="submit" class="status-button">Status Doorvoeren</button>
             </div>
         </section>
 </form>
