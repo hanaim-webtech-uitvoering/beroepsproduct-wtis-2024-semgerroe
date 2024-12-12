@@ -5,7 +5,7 @@ require_once 'db_connectie.php';
 $db = maakVerbinding();
 
 // haal alle componisten op en tel het aantal stukken
-$query = 'select c.componistId as id, c.naam as naam, count(S.stuknr) as aantal
+$query = 'SELECT c.componistId as id, c.naam as naam, count(S.stuknr) as aantal
           from Componist C left outer join Stuk S on C.componistId = S.componistId
           group by C.componistId, C.naam
           order by naam';
