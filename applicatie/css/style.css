@@ -60,3 +60,43 @@ button {
 button:hover {
     background-color: #45a049;
 }
+
+#shopping-cart {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 18px;
+}
+
+#shopping-cart a {
+    color: #000;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+}
+
+#shopping-cart img {
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
+}
+
+#cart-count {
+    background-color: #ff6347;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 50%;
+}
+
+#header-icons {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+#header-icons img {
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+}
+
