@@ -64,31 +64,8 @@ $producten = haalProductenOp();
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-<header>
-    <div id="login-status">
-        <?php toonLoginStatus($isIngelogd); ?>
-    </div>
-    <div id="header-icons">
-        <!-- Winkelmand -->
-        <div id="shopping-cart">
-            <a href="winkelmandje.php">
-                <img src="../images/cart.png" alt="Winkelmand" />
-                <span id="cart-count">
-                    <?php echo isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0; ?>
-                </span>
-            </a>
-        </div>
-        
-        <!-- Profiel -->
-        <?php if ($isIngelogd): ?>
-        <div id="profile">
-            <a href="profielpagina.php">
-                <img src="../images/profile-icon.png" alt="Profiel" />
-            </a>
-        </div>
-        <?php endif; ?>
-    </div>
-</header>
+
+<?php include('../header.php'); ?>
 
 <h1>Menu</h1>
 <ul id="menu-items">

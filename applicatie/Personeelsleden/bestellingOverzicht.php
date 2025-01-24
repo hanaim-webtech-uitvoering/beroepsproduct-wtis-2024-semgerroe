@@ -4,35 +4,34 @@ session_start();
 require_once('../db_connectie.php');
 require_once('../functies.php');
 
-// Functie om bestellingen op te halen
-function getBestellingen($verbinding) {
+if (!isGebruikerIngelogd() || $_SESSION['role'] != 'Personnel') {
+    header("Location: ../toegang-geweigerd.php");
+    exit();
+}
+
+function toonBestellingen($verbinding) {
     $sql = "SELECT o.order_id, o.client_name, o.status, o.address, p.product_name, p.quantity
             FROM Pizza_Order o
             LEFT JOIN Pizza_Order_Product p ON o.order_id = p.order_id
             ORDER BY o.status ASC, o.datetime ASC";
     
-    $stmt = $verbinding->query($sql);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC); // Haal alle rijen op
+    $query = $verbinding->query($sql);
+    return $query->fetchAll(PDO::FETCH_ASSOC);
 }
 
-// Functie om de status van een bestelling bij te werken
 function updateOrderStatus($verbinding, $order_id, $status) {
     $update_sql = "UPDATE Pizza_Order SET status = ? WHERE order_id = ?";
-    $stmt = $verbinding->prepare($update_sql);
-    $stmt->bindParam(1, $status, PDO::PARAM_INT);
-    $stmt->bindParam(2, $order_id, PDO::PARAM_INT);
+    $query = $verbinding->prepare($update_sql);
 
-    if ($stmt->execute()) {
+    if ($query->execute([$status, $order_id])) {
         echo "<script>alert('Status bijgewerkt!');</script>";
     } else {
         echo "<script>alert('Fout bij het bijwerken van de status.');</script>";
     }
 }
 
-// Ophalen van alle bestellingen, gesorteerd op status
-$rows = getBestellingen($verbinding);
+$rows = toonBestellingen($verbinding);
 
-// Controleer of de status moet worden bijgewerkt
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['order_id']) && isset($_POST['status'])) {
     $order_id = intval($_POST['order_id']);
     $status = intval($_POST['status']);
@@ -75,8 +74,7 @@ $isIngelogd = isGebruikerIngelogd();
                         </p>
                         <p>Klant: <?= htmlspecialchars($row['client_name']) ?></p>
                         
-                        <!-- Status update formulier -->
-                        <?php if ($row['status'] != 3): // Alleen de bestellingen die niet 'Afgeleverd' zijn kunnen worden geüpdatet ?>
+                        <?php if ($row['status'] != 3) : ?>
                             <form method="post" action="bestellingoverzicht.php">
                                 <input type="hidden" name="order_id" value="<?= htmlspecialchars($row['order_id']) ?>">
                                 <label for="status-<?= $row['order_id'] ?>">Wijzig status:</label>

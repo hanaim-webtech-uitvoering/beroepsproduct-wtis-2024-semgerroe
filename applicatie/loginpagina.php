@@ -17,8 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $db = maakVerbinding();
 
-    // Haal gebruiker op basis van gebruikersnaam
-    $user = haalGebruikerOpDoorGebruikersnaam($db, $username);
+    $user = haalGebruikersDetailsOp($db, $username);
 
     if ($user) {
         if (password_verify($password, $user['password'])) {
@@ -36,28 +35,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-/**
- * Haalt een gebruiker op basis van gebruikersnaam.
- */
-function haalGebruikerOpDoorGebruikersnaam($db, $username) {
+
+function haalGebruikersDetailsOp($db, $username) {
     $sql = "SELECT * FROM [User] WHERE username = :username";
     $query = $db->prepare($sql);
     $query->execute([':username' => $username]);
     return $query->fetch(PDO::FETCH_ASSOC);
 }
 
-/**
- * Start een sessie met de gebruikersgegevens.
- */
+
 function startSessie($user) {
     $_SESSION['user_id'] = $user['id'];
     $_SESSION['username'] = $user['username'];
     $_SESSION['role'] = $user['role'];
 }
 
-/**
- * Redirect de gebruiker op basis van hun rol.
- */
 function redirectOpBasisVanRol($role) {
     if ($role === 'Client') {
         header("Location: Klanten/menupagina.php");
@@ -66,6 +58,27 @@ function redirectOpBasisVanRol($role) {
     }
     exit;
 }
+
+function toonLoginFormulier($username = '', $role = '') {
+    ?>
+    <form method="post" action="loginpagina.php">
+        <label for="username">Gebruikersnaam:</label>
+        <input type="text" id="username" name="username" value="<?= htmlspecialchars($username) ?>" required>
+
+        <label for="password">Wachtwoord:</label>
+        <input type="password" id="password" name="password" required>
+
+        <label for="role">Login als:</label>
+        <select id="role" name="role" required>
+            <option value="Client" <?= ($role === 'Client') ? 'selected' : '' ?>>Klant</option>
+            <option value="Personnel" <?= ($role === 'Personnel') ? 'selected' : '' ?>>Personeel</option>
+        </select>
+
+        <button type="submit">Login</button>
+    </form>
+    <?php
+}
+
 ?>
 
 
@@ -81,30 +94,10 @@ function redirectOpBasisVanRol($role) {
 <body>
     <h1>Login</h1>
 
-    <!-- Foutmeldingen weergeven -->
-    <?php if (!empty($error_messages)): ?>
-        <ul style="color: red;">
-            <?php foreach ($error_messages as $message): ?>
-                <li><?= htmlspecialchars($message) ?></li>
-            <?php endforeach; ?>
-        </ul>
-    <?php endif; ?>
+    <?php toonFoutmeldingen($error_messages); ?>
 
-    <form method="post" action="loginpagina.php">
-        <label for="username">Gebruikersnaam:</label>
-        <input type="text" id="username" name="username" value="<?= htmlspecialchars($_POST['username'] ?? '') ?>" required>
+    <?php toonLoginFormulier($_POST['username'] ?? '', $_POST['role'] ?? ''); ?>
 
-        <label for="password">Wachtwoord:</label>
-        <input type="password" id="password" name="password" required>
-
-        <label for="role">Login als:</label>
-        <select id="role" name="role" required>
-            <option value="Client" <?= (isset($_POST['role']) && $_POST['role'] === 'Client') ? 'selected' : '' ?>>Klant</option>
-            <option value="Personnel" <?= (isset($_POST['role']) && $_POST['role'] === 'Personnel') ? 'selected' : '' ?>>Personeel</option>
-        </select>
-
-        <button type="submit">Login</button>
-    </form>
 
     <p>Heb je nog geen account? <a href="registratiepagina.php">Registreer hier</a>.</p>
 </body>

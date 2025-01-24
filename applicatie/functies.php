@@ -15,5 +15,24 @@ function toonLoginStatus() {
     }
 }
 
+function haalProductInfoOp($productName) {
+    $db = maakVerbinding();
+    $sql = "SELECT price, name FROM Product WHERE name = :product_name";
+    $query = $db->prepare($sql);
+    $query->execute(['product_name' => $productName]);
+    return $query->fetch(PDO::FETCH_ASSOC);
+}
+
+function toonFoutmeldingen($error_messages) {
+    if (!empty($error_messages)) {
+        echo "<ul style='color: red;'>";
+        foreach ($error_messages as $message) {
+            echo "<li>$message</li>";
+        }
+        echo "</ul>";
+}
+}
+
+
 
 ?>

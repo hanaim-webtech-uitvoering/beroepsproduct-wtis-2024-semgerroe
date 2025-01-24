@@ -4,41 +4,67 @@ session_start();
 require_once('../db_connectie.php');
 require_once('../functies.php');
 
-// Check of de gebruiker ingelogd is
+if (!isGebruikerIngelogd() || $_SESSION['role'] != 'Personnel') {
+    header("Location: ../toegang-geweigerd.php");
+    exit();
+}
+
 $isIngelogd = isGebruikerIngelogd();
 
 if (isset($_GET['order_id'])) {
     $order_id = intval($_GET['order_id']);
     
-    // Haal de details van deze bestelling op
-    $bestelling = getBestellingDetails($verbinding, $order_id);
-    $producten = getProductenVanBestelling($verbinding, $order_id);
+    $bestelling = haalBestellingDetailsOp($verbinding, $order_id);
+    $producten = haalProductenVanBestellingOp($verbinding, $order_id);
 }
 
-// Functie om bestellinggegevens op te halen (zoals klantnaam, adres, totaalprijs en tijd)
-function getBestellingDetails($verbinding, $order_id) {
+function haalBestellingDetailsOp($verbinding, $order_id) {
     $sql = "SELECT o.order_id, o.client_name, o.address, o.datetime, o.status
             FROM Pizza_Order o
             WHERE o.order_id = ?";
     
-    $stmt = $verbinding->prepare($sql);
-    $stmt->execute([$order_id]);
-    return $stmt->fetch(PDO::FETCH_ASSOC);  // Retourneer de details van de bestelling
+    $query = $verbinding->prepare($sql);
+    $query->execute([$order_id]);
+    return $query->fetch(PDO::FETCH_ASSOC);  
 }
 
-// Functie om de producten van een bestelling op te halen
-function getProductenVanBestelling($verbinding, $order_id) {
+function haalProductenVanBestellingOp($verbinding, $order_id) {
     $sql = "SELECT p.product_name, p.quantity
             FROM Pizza_Order_Product p
             WHERE p.order_id = ?";
     
-    $stmt = $verbinding->prepare($sql);
-    $stmt->execute([$order_id]);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);  // Retourneer een lijst van producten voor deze bestelling
+    $query = $verbinding->prepare($sql);
+    $query->execute([$order_id]);
+    $producten = $query->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($producten as &$product) {
+        $productInfo = haalProductInfoOp($product['product_name']);
+        $product['price'] = $productInfo['price'];
+    }
+    return $producten;
+}
+
+function toonBestellingStatus($status) {
+    if ($status == 1) {
+        return "Aan het bereiden";
+    } elseif ($status == 2) {
+        return "Onderweg";
+    } elseif ($status == 3) {
+        return "Afgeleverd";
+    } else {
+        return "Status onbekend";
+    }
+}
+
+function toonProducten($producten) {
+    echo "<ul id='order-items'>";
+    foreach ($producten as $product) {
+        echo "<li>" . htmlspecialchars($product['quantity']) . "x " . htmlspecialchars($product['product_name']) . "</li>";
+    }
+    echo "</ul>";
 }
 ?>
 
-<!-- Detailoverzicht Bestelling Page (PE-02) -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -66,27 +92,10 @@ function getProductenVanBestelling($verbinding, $order_id) {
     <p><strong>Besteld op:</strong> <?= htmlspecialchars($bestelling['datetime']) ?></p>
 
     <h2>Menu Items</h2>
-    <ul id="order-items">
-        <?php foreach ($producten as $product): ?>
-            <li><?= htmlspecialchars($product['quantity']) ?>x <?= htmlspecialchars($product['product_name']) ?></li>
-        <?php endforeach; ?>
-    </ul>
+    <?php toonProducten($producten); ?>
 
     <h2>Status</h2>
-    <p>
-        <?php 
-            // Weergeef de status van de bestelling op basis van de waarde van `status` in de database met if-else
-            if ($bestelling['status'] == 1) {
-                echo "Aan het bereiden";
-            } elseif ($bestelling['status'] == 2) {
-                echo "Onderweg";
-            } elseif ($bestelling['status'] == 3) {
-                echo "Afgeleverd";
-            } else {
-                echo "Status onbekend";
-            }
-        ?>
-    </p>
+    <p><?= toonBestellingStatus($bestelling['status']); ?></p>
 <?php else: ?>
     <p>Geen details gevonden voor deze bestelling.</p>
 <?php endif; ?>
